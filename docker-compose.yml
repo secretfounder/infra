@@ -1,10 +1,5 @@
-version: '3.8'
-
 services:
   hypercommit:
-    build:
-      context: ..
-      dockerfile: Containerfile
     image: hypercommit/hypercommit:latest
     container_name: hypercommit
     restart: unless-stopped
@@ -40,6 +35,20 @@ services:
     depends_on:
       hypercommit:
         condition: service_healthy
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=10  # Check every 10 seconds
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_ROLLING_RESTART=true
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
+    command: hypercommit  # Only monitor hypercommit container
 
 networks:
   hypercommit-network:
