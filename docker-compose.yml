@@ -18,9 +18,7 @@ services:
       retries: 5
 
   hypercommit:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile
+    image: hypercommit/hypercommit:latest
     container_name: hypercommit
     restart: unless-stopped
     environment:
@@ -70,11 +68,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=10  # Check every 10 seconds
+      - WATCHTOWER_POLL_INTERVAL=10 # Check every 10 seconds
       - WATCHTOWER_INCLUDE_RESTARTING=true
       - WATCHTOWER_ROLLING_RESTART=true
       - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
-    command: hypercommit  # Only monitor hypercommit container
+    command: hypercommit # Only monitor hypercommit container
 
 networks:
   hypercommit-network:
