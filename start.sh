@@ -57,7 +57,7 @@ sleep 5
 
 # Run database migrations
 echo -e "${GREEN}Running database migrations...${NC}"
-docker compose exec -T hypercommit sh -c "cd /app && bun run db:push"
+docker exec -T hypercommit sh -c "cd /app && bun run db:push"
 
 # Wait for all services to be healthy
 echo -e "${GREEN}Waiting for all services to be healthy...${NC}"
