@@ -6,18 +6,23 @@ set -e  # Exit on error
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Hypercommit Deployment Script ===${NC}\n"
 
 # Check if .env exists
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}Warning: .env file not found!${NC}"
-    echo -e "Copying .env.example to .env..."
-    cp .env.example .env
-    echo -e "${YELLOW}Please edit .env with your configuration before proceeding.${NC}"
-    echo -e "${YELLOW}Press Enter to continue or Ctrl+C to exit...${NC}"
-    read
+    echo -e "${YELLOW}No .env file found. Running initialization script...${NC}\n"
+    ./init.sh
+    echo ""
+fi
+
+# Verify .env has been properly configured
+if grep -q "change-me-run-init-script" .env; then
+    echo -e "${RED}Error: .env file contains placeholder values!${NC}"
+    echo -e "${YELLOW}Please run ${GREEN}./init.sh${YELLOW} to generate secure credentials${NC}"
+    exit 1
 fi
 
 # Check if Docker is installed
@@ -46,8 +51,16 @@ docker compose down
 docker compose build --no-cache
 docker compose up -d
 
-# Wait for services to be healthy
-echo -e "${GREEN}Waiting for services to be healthy...${NC}"
+# Wait for PostgreSQL to be healthy
+echo -e "${GREEN}Waiting for PostgreSQL to be healthy...${NC}"
+sleep 5
+
+# Run database migrations
+echo -e "${GREEN}Running database migrations...${NC}"
+docker compose exec -T hypercommit sh -c "cd /app && bun run db:push"
+
+# Wait for all services to be healthy
+echo -e "${GREEN}Waiting for all services to be healthy...${NC}"
 sleep 5
 
 # Check service status

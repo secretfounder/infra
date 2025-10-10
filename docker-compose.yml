@@ -1,16 +1,42 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hypercommit-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=hypercommit
+      - POSTGRES_USER=hypercommit
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hypercommit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hypercommit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   hypercommit:
-    image: hypercommit/hypercommit:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
     container_name: hypercommit
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - DATABASE_URL=postgresql://hypercommit:${POSTGRES_PASSWORD}@postgres:5432/hypercommit
     env_file:
       - .env
+    volumes:
+      - git-repos:/data/repositories
     networks:
       - hypercommit-network
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -55,6 +81,10 @@ networks:
     driver: bridge
 
 volumes:
+  postgres-data:
+    driver: local
+  git-repos:
+    driver: local
   caddy-data:
     driver: local
   caddy-config:
