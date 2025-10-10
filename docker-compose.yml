@@ -35,12 +35,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   caddy:
     image: caddy:2-alpine
@@ -56,9 +50,6 @@ services:
       - caddy-config:/config
     networks:
       - hypercommit-network
-    depends_on:
-      hypercommit:
-        condition: service_healthy
 
   watchtower:
     image: containrrr/watchtower:latest
